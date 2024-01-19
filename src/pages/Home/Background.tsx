@@ -402,7 +402,7 @@ function Block({
 
 let BLOCKS = 0;
 
-export function Background() {
+export function Background({ isActive }: { isActive?: boolean }) {
   const IconRef = useRef<HTMLDivElement>(null);
   const { clientWidth: width, clientHeight: height } = IconRef.current ?? {
     clientWidth: 0,
@@ -413,8 +413,11 @@ export function Background() {
   >([]);
 
   useEffect(() => {
+    if (!isActive) {
+      return;
+    }
     setBlocks([{ key: BLOCKS++, stage: 0, active: true, isFirst: true }]);
-  }, [width, height]);
+  }, [width, height, isActive]);
 
   useEffect(() => {
     if (blocks.find(({ active }) => !active)) {
