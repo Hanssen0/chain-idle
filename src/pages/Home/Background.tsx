@@ -475,6 +475,7 @@ export function Background({ isActive }: { isActive?: boolean }) {
       left={0}
       top={0}
       overflow="hidden"
+      userSelect="none"
       _dark={{ color: "gray.700" }}
       _light={{ color: "gray.200" }}
     >
