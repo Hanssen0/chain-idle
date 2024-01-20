@@ -22,6 +22,10 @@ export function Latex(
   }, [children, ref, props.options]);
 
   return (
-    <Box ref={ref} {...{ ...props, children: undefined, options: undefined }} />
+    <Box
+      ref={ref}
+      {...{ ...props, children: undefined, options: undefined }}
+      className="notranslate"
+    />
   );
 }

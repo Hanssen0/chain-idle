@@ -478,6 +478,7 @@ export function Background({ isActive }: { isActive?: boolean }) {
       userSelect="none"
       _dark={{ color: "gray.700" }}
       _light={{ color: "gray.200" }}
+      className="notranslate"
     >
       {elements}
     </Box>
