@@ -2,7 +2,7 @@ import { ColorModeScript } from "@chakra-ui/react";
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import { App } from "./App";
-import * as serviceWorker from "./serviceWorker";
+import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 import { theme } from "./theme";
 
 const container = document.getElementById("root");
@@ -16,4 +16,4 @@ root.render(
   </React.StrictMode>
 );
 
-serviceWorker.register();
+serviceWorkerRegistration.register();
