@@ -14,6 +14,9 @@ import {
   Tabs,
   Spacer,
   Container,
+  Collapse,
+  Fade,
+  Box,
 } from "@chakra-ui/react";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { Background } from "./Background";
@@ -45,7 +48,7 @@ function getPrimaryExp(stage: Stages): string {
     case Stages.Adder:
     case Stages.StackOverflow:
     case Stages.Register:
-      return "B(t + dt) = B(t) + x";
+      return "B(t + dt) = B(t) + p \\times dt";
   }
 }
 
@@ -54,20 +57,29 @@ class VariableExpression {
   readonly expression: string;
   readonly cost: string;
   readonly level: number;
-  readonly available: boolean;
+  readonly isHidden: boolean;
+  readonly isAvailable: boolean;
+  readonly isPurchasable: boolean;
+  readonly unavailableMsg: string;
 
   constructor({
     key,
     expression,
     cost,
     level,
-    available,
+    isHidden,
+    isAvailable,
+    isPurchasable,
+    unavailableMsg,
   }: Fields<VariableExpression>) {
     this.key = key;
     this.expression = expression;
     this.cost = cost;
     this.level = level;
-    this.available = available;
+    this.isHidden = isHidden;
+    this.isAvailable = isAvailable;
+    this.isPurchasable = isPurchasable;
+    this.unavailableMsg = unavailableMsg;
   }
 
   static from(data: Fields<VariableExpression>) {
@@ -82,14 +94,17 @@ function getVariableExps(
 ): VariableExpression[] {
   const expressions = [];
 
-  const x = levels.get("x") ?? 0;
+  const p = levels.get("p") ?? 0;
   expressions.push(
     VariableExpression.from({
-      key: "x",
-      expression: `x = ${x > 0 ? x * 50 : 1}`,
+      key: "p",
+      expression: `p = ${p > 0 ? p * 50 : 1}`,
       cost: "Free",
-      level: levels.get("x") ?? 0,
-      available: stage > Stages.Adder,
+      level: levels.get("p") ?? 0,
+      isHidden: stage < Stages.Adder,
+      isAvailable: stage >= Stages.StackOverflow,
+      isPurchasable: true,
+      unavailableMsg: "B(t) \\ge 20",
     })
   );
 
@@ -105,10 +120,10 @@ function nextBlocks(
     return blocks;
   }
 
-  const xLevel = levels.get("x") ?? 0;
-  const x = xLevel > 0 ? 50 * xLevel : 1;
+  const pLevel = levels.get("p") ?? 0;
+  const p = pLevel > 0 ? 50 * pLevel : 1;
 
-  return blocks.add(HugeNum.fromInt(x));
+  return blocks.add(HugeNum.fromInt(p));
 }
 
 export function Home() {
@@ -140,7 +155,6 @@ export function Home() {
       case Stages.Adder:
         if (popupType === "" && blocks.gt(HugeNum.fromInt(19))) {
           setPopupType("BuyAvailable");
-          setStage(Stages.StackOverflow);
         }
         break;
     }
@@ -149,6 +163,9 @@ export function Home() {
   const onClose = useCallback(() => {
     if (popupType === "Introduction" && stage === Stages.Introduction) {
       setStage(Stages.Adder);
+    }
+    if (popupType === "BuyAvailable" && stage === Stages.Adder) {
+      setStage(Stages.StackOverflow);
     }
     setPopupType("");
   }, [popupType, stage]);
@@ -169,31 +186,65 @@ export function Home() {
   const variableExps = useMemo(
     () =>
       getVariableExps(stage, blocks, levels).map(
-        ({ expression, available, cost, level, key }) => (
-          <Container key={key}>
-            <Button
-              width="100%"
-              isDisabled={!available}
-              borderRadius={0}
-              height=""
-              onClick={() => onPurchase(key)}
-            >
-              <Flex
-                width="100%"
-                fontWeight="normal"
-                alignItems="center"
-                px={4}
-                py={2}
-              >
-                <Latex>{expression}</Latex>
-                <Spacer />
-                <Flex direction="column" alignItems="end">
-                  <Text>{cost}</Text>
-                  <Text color="gray">Level: {level}</Text>
-                </Flex>
-              </Flex>
-            </Button>
-          </Container>
+        ({
+          expression,
+          isHidden,
+          isAvailable,
+          isPurchasable,
+          unavailableMsg,
+          cost,
+          level,
+          key,
+        }) => (
+          <Collapse
+            key={key}
+            in={!isHidden}
+            transition={{ enter: { duration: 1 } }}
+          >
+            <Container>
+              <Box position="relative">
+                <Button
+                  width="100%"
+                  isDisabled={!isAvailable || !isPurchasable}
+                  borderRadius={0}
+                  height=""
+                  onClick={() => onPurchase(key)}
+                >
+                  <Flex
+                    width="100%"
+                    fontWeight="normal"
+                    alignItems="center"
+                    px={4}
+                    py={2}
+                  >
+                    <Latex>{expression}</Latex>
+                    <Spacer />
+                    <Flex direction="column" alignItems="end">
+                      <Text>{cost}</Text>
+                      <Text color="gray">Level: {level}</Text>
+                    </Flex>
+                  </Flex>
+                </Button>
+                <Fade
+                  in={!isAvailable}
+                  transition={{ exit: { duration: 1 } }}
+                  unmountOnExit
+                >
+                  <Center
+                    position="absolute"
+                    top={0}
+                    left={0}
+                    width="100%"
+                    height="100%"
+                    color="chakra-placeholder-color"
+                    bg="chakra-subtle-bg"
+                  >
+                    Available after <Latex ml={1}>{unavailableMsg}</Latex>
+                  </Center>
+                </Fade>
+              </Box>
+            </Container>
+          </Collapse>
         )
       ),
     [stage, blocks, levels, onPurchase]
@@ -223,13 +274,17 @@ export function Home() {
             <Background isActive={stage !== Stages.Introduction} />
           </Center>
         </Flex>
-        <Tabs flexBasis={{ base: "100%", xl: "50%" }}>
+        <Tabs
+          flexBasis={{ base: "100%", xl: "50%" }}
+          display="flex"
+          flexDirection="column"
+        >
           <TabList display="flex">
             <Tab py={4} flexGrow={1}>
-              Variables
+              Tools
             </Tab>
           </TabList>
-          <TabPanels py={3}>
+          <TabPanels py={3} flexGrow={1} position="relative">
             <TabPanel p={0}>
               <Flex direction="column">{variableExps}</Flex>
             </TabPanel>
