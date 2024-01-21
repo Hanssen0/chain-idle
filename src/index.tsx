@@ -4,6 +4,7 @@ import * as ReactDOM from "react-dom/client";
 import { App } from "./App";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 import { theme } from "./theme";
+import { registrationConfig } from "./utils/serviceWorker";
 
 const container = document.getElementById("root");
 if (!container) throw new Error("Failed to find the root element");
@@ -16,4 +17,4 @@ root.render(
   </React.StrictMode>
 );
 
-serviceWorkerRegistration.register();
+serviceWorkerRegistration.register(registrationConfig);
