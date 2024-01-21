@@ -17,6 +17,7 @@ import {
   Collapse,
   Fade,
   Box,
+  Grid,
 } from "@chakra-ui/react";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { Background } from "./Background";
@@ -253,9 +254,14 @@ export function Home() {
   return (
     <Flex minHeight="100vh" direction="column">
       <Popup type={popupType} onClose={onClose} />
-      <Flex wrap="wrap" grow={1} borderBottomWidth="1px" borderColor="inherit">
+      <Grid
+        templateColumns={{ base: "1fr", xl: "1fr 1fr" }}
+        templateRows={{ base: "1fr 1fr", xl: "1fr" }}
+        flexGrow={1}
+        borderBottomWidth="1px"
+        borderColor="inherit"
+      >
         <Flex
-          basis={{ base: "100%", xl: "50%" }}
           direction="column"
           borderBottomWidth={{ base: "1px", xl: "0" }}
           borderRightWidth={{ xl: "1px" }}
@@ -274,11 +280,7 @@ export function Home() {
             <Background isActive={stage !== Stages.Introduction} />
           </Center>
         </Flex>
-        <Tabs
-          flexBasis={{ base: "100%", xl: "50%" }}
-          display="flex"
-          flexDirection="column"
-        >
+        <Tabs display="flex" flexDirection="column">
           <TabList display="flex">
             <Tab py={4} flexGrow={1}>
               Tools
@@ -290,7 +292,7 @@ export function Home() {
             </TabPanel>
           </TabPanels>
         </Tabs>
-      </Flex>
+      </Grid>
       <Flex justifyContent="center" py={2}>
         <ColorModeSwitcher />
       </Flex>
