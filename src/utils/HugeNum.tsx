@@ -24,7 +24,9 @@ export class HugeNum {
   /** ln(1.2) with decimals */
   static readonly LN_ONE_P_TWO_N = HugeNum.decInDecs(182321556793954600n, 18);
   /** Max exponent with decimals */
-  static readonly MAX_EXP_N = HugeNum.inDecs(10n ** 5n);
+  static readonly MAX_EXP = 10 ** 5;
+  /** Max exponent with decimals */
+  static readonly MAX_EXP_N = HugeNum.inDecs(HugeNum.MAX_EXP);
   /** Exponent of max exponent with decimals */
   static readonly MAX_EXP_EXP_N = HugeNum.inDecs(5n);
   /** Precise decimals, b >> a if b >= a * 10 ** PRECISE_EXPONENT */
@@ -120,11 +122,7 @@ export class HugeNum {
     return (HugeNum.lnInt(x) * HugeNum.ONE_N) / HugeNum.LN_TEN_N;
   }
 
-  static tenPow(x: bigint): bigint {
-    if (x <= 0n) {
-      return 1n;
-    }
-
+  static _tenPow(x: bigint): bigint {
     const l = x / HugeNum.ONE_N;
     const r = x - l * HugeNum.ONE_N;
     for (let i = 0; i < 8; i += 1) {
@@ -133,6 +131,18 @@ export class HugeNum {
       }
     }
     return 10n ** l * 9n;
+  }
+
+  static tenPow(x: bigint): bigint {
+    if (x === 0n) {
+      return HugeNum.ONE_N;
+    }
+
+    if (x < 0n) {
+      return HugeNum.ONE_N / HugeNum._tenPow(-x);
+    }
+
+    return HugeNum.ONE_N * HugeNum._tenPow(x);
   }
 
   /** Get the exponent of self subtract the exponent of value
@@ -155,13 +165,13 @@ export class HugeNum {
       if (bExp > HugeNum.MAX_PREC_EXP_N) {
         return HugeNum.NEG_PREC_EXP_N;
       }
-      bExp = HugeNum.inDecs(HugeNum.tenPow(bExp));
+      bExp = HugeNum.tenPow(bExp);
     }
     if (depthDiff === 1n) {
       if (aExp > HugeNum.MAX_PREC_EXP_N) {
         return HugeNum.PREC_EXP_N;
       }
-      aExp = HugeNum.inDecs(HugeNum.tenPow(aExp));
+      aExp = HugeNum.tenPow(aExp);
     }
     const expDiff = aExp - bExp;
     if (expDiff >= HugeNum.PREC_EXP_N) {
@@ -186,7 +196,7 @@ export class HugeNum {
     } else if (value.depth === 2n) {
       if (value.exponent <= HugeNum.MAX_PREC_EXP_N) {
         value.depth = 1n;
-        value.exponent = HugeNum.inDecs(HugeNum.tenPow(value.exponent)) + exp;
+        value.exponent = HugeNum.tenPow(value.exponent) + exp;
       }
     }
 
@@ -241,7 +251,7 @@ export class HugeNum {
     if (value.depth === 2n && value.exponent <= HugeNum.PREC_EXP_N) {
       const exp = new HugeNum({
         mantissa:
-          HugeNum.inDecs(HugeNum.tenPow(value.exponent)) +
+          HugeNum.tenPow(value.exponent) +
           HugeNum.log10Int(value.mantissa),
         depth: 1n,
         exponent: 0n,
@@ -280,12 +290,12 @@ export class HugeNum {
       if (aExp > HugeNum.MAX_PREC_EXP_N) {
         return a.mantissa > 0n;
       }
-      aExp = HugeNum.inDecs(HugeNum.tenPow(aExp));
+      aExp = HugeNum.tenPow(aExp);
     } else if (depthDiff === -1n) {
       if (bExp > HugeNum.MAX_PREC_EXP_N) {
         return a.mantissa <= 0n;
       }
-      bExp = HugeNum.inDecs(HugeNum.tenPow(bExp));
+      bExp = HugeNum.tenPow(bExp);
     }
 
     if (aExp === bExp) {
@@ -310,9 +320,9 @@ export class HugeNum {
     }
 
     if (expSub > 0n) {
-      this.mantissa += value.mantissa / HugeNum.tenPow(expSub);
+      this.mantissa += value.mantissa * HugeNum.ONE_N / HugeNum.tenPow(expSub);
     } else if (expSub < 0n) {
-      this.mantissa = this.mantissa / HugeNum.tenPow(-expSub) + value.mantissa;
+      this.mantissa = this.mantissa  * HugeNum.ONE_N / HugeNum.tenPow(-expSub) + value.mantissa;
       this.depth = value.depth;
       this.exponent = value.exponent;
     } else {
@@ -338,9 +348,9 @@ export class HugeNum {
     }
 
     if (expSub > 0n) {
-      this.mantissa -= value.mantissa / HugeNum.tenPow(expSub);
+      this.mantissa -= value.mantissa * HugeNum.ONE_N / HugeNum.tenPow(expSub);
     } else if (expSub < 0n) {
-      this.mantissa = this.mantissa / HugeNum.tenPow(-expSub) - value.mantissa;
+      this.mantissa = this.mantissa * HugeNum.ONE_N / HugeNum.tenPow(-expSub) - value.mantissa;
       this.depth = value.depth;
       this.exponent = value.exponent;
     } else {
@@ -364,7 +374,7 @@ export class HugeNum {
 
     if (exp.depth === 1n && exp.exponent < HugeNum.MAX_EXP_EXP_N) {
       this.depth = 1n;
-      this.exponent = exp.mantissa * HugeNum.tenPow(exp.exponent);
+      this.exponent = exp.mantissa * HugeNum.tenPow(exp.exponent) / HugeNum.ONE_N;
     } else {
       HugeNum.normNoM(exp);
       this.depth = exp.depth + 1n;
@@ -472,14 +482,10 @@ export class HugeNum {
   }
 
   toString(): string {
-    if (this.depth === 0n) {
-      return HugeNum.encodeDecimal(this.mantissa);
-    }
-
     if (this.depth === 1n) {
       if (this.exponent < HugeNum.MAX_EXP_EXP_N) {
         return HugeNum.encodeDecimal(
-          this.mantissa * HugeNum.tenPow(this.exponent)
+          this.mantissa * HugeNum.tenPow(this.exponent) / HugeNum.ONE_N
         );
       }
       return `${HugeNum.encodeDecimal(this.mantissa)}e${HugeNum.encodeDecimal(
@@ -490,5 +496,16 @@ export class HugeNum {
     return `${Array.from(new Array(Number(this.depth)), () => "e").join(
       ""
     )}${HugeNum.encodeDecimal(this.exponent)}`;
+  }
+
+  visualScale(): { depth: number, n: number } {
+    if (this.depth === 1n) {
+      if (this.exponent < HugeNum.MAX_EXP_EXP_N) {
+        return { depth: 0, n: HugeNum.decToNum(this.mantissa * HugeNum.tenPow(this.exponent) / HugeNum.ONE_N) };
+      }
+      return { depth: 1, n: HugeNum.decToNum(this.exponent + HugeNum.log10Int(this.mantissa)) };
+    }
+
+    return { depth: Number(this.depth), n: HugeNum.decToNum(this.exponent) };
   }
 }

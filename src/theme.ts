@@ -22,7 +22,7 @@ export const theme = extendTheme({
   styles: {
     global: {
       body: {
-        "-webkit-tap-highlight-color": "transparent",
+        WebkitTapHighlightColor: "transparent",
       },
     },
   },

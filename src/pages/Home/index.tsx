@@ -18,6 +18,7 @@ import {
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { Background } from "./Background";
 import { Popup } from "@/components/Popup";
+import { Progress } from "./Progress";
 
 enum Stages {
   Introduction,
@@ -147,7 +148,7 @@ export function Home() {
 
   const onClose = useCallback(() => {
     if (popupType === "Introduction" && stage === Stages.Introduction) {
-        setStage(Stages.Adder);
+      setStage(Stages.Adder);
     }
     setPopupType("");
   }, [popupType, stage]);
@@ -218,6 +219,7 @@ export function Home() {
             <Latex zIndex={1} fontSize={{ base: "2xl", md: "3xl", xl: "4xl" }}>
               {getPrimaryExp(stage)}
             </Latex>
+            <Progress progress={blocks} />
             <Background isActive={stage !== Stages.Introduction} />
           </Center>
         </Flex>
