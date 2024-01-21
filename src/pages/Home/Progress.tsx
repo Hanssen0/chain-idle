@@ -4,6 +4,76 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const HISTORY_LENGTH = 24;
 
+function ProgressY({
+  highY,
+  lowY,
+  width,
+  height,
+  history,
+}: {
+  highY: number;
+  lowY: number;
+  width: number;
+  height: number;
+  history: { x: number; y: { depth: number; n: number } }[];
+}) {
+  const historyGap = width / (HISTORY_LENGTH - 1);
+
+  const [nowY, setNowY] = useState([-0.1, 0.4]);
+  const graphPath = useMemo(() => {
+    const pos = history.map(({ y }, i) => [
+      i * historyGap,
+      ((nowY[1] - y.n) * height * 0.9) / (nowY[1] - nowY[0]) + height * 0.1,
+      y.depth,
+    ]);
+    return d(
+      pos
+        .map(([x, y, depth], i): [string, number[]][] => {
+          if (i === 0) {
+            return [["", [x, y]]];
+          }
+
+          const [pX, pY, pD] = pos[i - 1];
+          if (pD === depth || pD === -1) {
+            return [["S", [0.9 * x + 0.1 * pX, 0.9 * y + 0.1 * pY, x, y]]];
+          }
+          return [
+            ["V", [height]],
+            ["S", [0.9 * x + 0.1 * pX, 0.9 * y + 0.1 * pY, x, y]],
+          ];
+        })
+        .flat()
+    );
+  }, [historyGap, history, height, nowY]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNowY((nowY) => [
+        (nowY[0] * 59 + lowY - 0.1) / 60,
+        (nowY[1] * 59 + highY + 0.4) / 60,
+      ]);
+    }, 100 / 6);
+
+    return () => clearInterval(interval);
+  }, [lowY, highY]);
+
+  return (
+    <>
+      <chakra.path
+        _dark={{ fill: "blackAlpha.300" }}
+        _light={{ fill: "blackAlpha.50" }}
+        d={`M0,${height}L${graphPath}V${height}Z`}
+      />
+      <chakra.path
+        stroke="currentcolor"
+        strokeWidth={2}
+        fill="none"
+        d={`M${graphPath}`}
+      />
+    </>
+  );
+}
+
 export function Progress({ progress }: { progress: HugeNum }) {
   const [history, setHistory] = useState(
     Array.from(Array(HISTORY_LENGTH + 1), (_, i) => ({
@@ -32,7 +102,6 @@ export function Progress({ progress }: { progress: HugeNum }) {
     }
   }, [fromX, toX, history]);
 
-  const [nowY, setNowY] = useState([-0.1, 0.4]);
   const yRange = useMemo(() => {
     const visibleHis = history.filter(
       ({ x }) => toX - HISTORY_LENGTH < x && x <= toX
@@ -43,48 +112,12 @@ export function Progress({ progress }: { progress: HugeNum }) {
     ];
   }, [history, toX]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setNowY((nowY) => [
-        (nowY[0] * 59 + yRange[0] - 0.1) / 60,
-        (nowY[1] * 59 + yRange[1] + 0.4) / 60,
-      ]);
-    }, 100 / 6);
-
-    return () => clearInterval(interval);
-  }, [yRange]);
-
   const boxRef = useRef<HTMLDivElement>(null);
   const { clientWidth: width, clientHeight: height } = boxRef.current ?? {
     clientWidth: 0,
     clientHeight: 0,
   };
   const historyGap = width / (HISTORY_LENGTH - 1);
-  const graphPath = useMemo(() => {
-    const pos = history.map(({ y }, i) => [
-      i * historyGap,
-      ((nowY[1] - y.n) * height * 0.9) / (nowY[1] - nowY[0]) + height * 0.1,
-      y.depth,
-    ]);
-    return d(
-      pos
-        .map(([x, y, depth], i): [string, number[]][] => {
-          if (i === 0) {
-            return [["", [x, y]]];
-          }
-
-          const [pX, pY, pD] = pos[i - 1];
-          if (pD === depth || pD === -1) {
-            return [["S", [0.9 * x + 0.1 * pX, 0.9 * y + 0.1 * pY, x, y]]];
-          }
-          return [
-            ["V", [height]],
-            ["S", [0.9 * x + 0.1 * pX, 0.9 * y + 0.1 * pY, x, y]],
-          ];
-        })
-        .flat()
-    );
-  }, [historyGap, history, height, nowY]);
   const moveAni = useMemo(() => {
     if (fromX === toX) {
       return undefined;
@@ -126,16 +159,12 @@ export function Progress({ progress }: { progress: HugeNum }) {
           setFromX(toX);
         }}
       >
-        <chakra.path
-          _dark={{ fill: "blackAlpha.300" }}
-          _light={{ fill: "blackAlpha.50" }}
-          d={`M0,${height}L${graphPath}V${height}Z`}
-        />
-        <chakra.path
-          stroke="currentcolor"
-          strokeWidth={2}
-          fill="none"
-          d={`M${graphPath}`}
+        <ProgressY
+          width={width}
+          height={height}
+          lowY={yRange[0]}
+          highY={yRange[1]}
+          history={history}
         />
       </Icon>
     </Box>
