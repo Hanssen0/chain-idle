@@ -29,15 +29,24 @@ enum Stages {
   Adder,
   StackOverflow,
   Register,
+  CarryLookaheadAdder,
 }
 
-function Status(props: { blocks: HugeNum } & FlexProps) {
-  const { blocks } = props;
+function Status(
+  props: { stage: Stages; blocks: HugeNum; ideas: HugeNum } & FlexProps
+) {
+  const { stage, blocks, ideas } = props;
+  const elements = [<Latex key="B">{`B(t) = ${blocks.toString()}`}</Latex>];
+
+  if (stage >= Stages.CarryLookaheadAdder) {
+    elements.push(
+      <Latex key="B_new" ml={4}>{`B_{new}(t) = ${ideas.toString()}`}</Latex>
+    );
+  }
+
   return (
     <Flex p={4} {...{ ...props, blocks: undefined }}>
-      <Center flexGrow={1}>
-        <Latex>{`B(t) = ${blocks.toString()}`}</Latex>
-      </Center>
+      <Center flexGrow={1}>{elements}</Center>
     </Flex>
   );
 }
@@ -56,7 +65,7 @@ function getPrimaryExp(stage: Stages): string {
 class VariableExpression {
   readonly key: string;
   readonly expression: string;
-  readonly cost: string;
+  readonly cost: HugeNum;
   readonly level: number;
   readonly isHidden: boolean;
   readonly isAvailable: boolean;
@@ -90,21 +99,22 @@ class VariableExpression {
 
 function getVariableExps(
   stage: Stages,
-  blocks: HugeNum,
+  ideas: HugeNum,
   levels: Map<string, number>
 ): VariableExpression[] {
   const expressions = [];
 
   const p = levels.get("p") ?? 0;
+  const cost = HugeNum.fromInt(1000n).mul(HugeNum.fromInt(p));
   expressions.push(
     VariableExpression.from({
       key: "p",
       expression: `p = ${p > 0 ? p * 50 : 1}`,
-      cost: "Free",
+      cost,
       level: levels.get("p") ?? 0,
       isHidden: stage < Stages.Adder,
       isAvailable: stage >= Stages.StackOverflow,
-      isPurchasable: true,
+      isPurchasable: !cost.gt(ideas),
       unavailableMsg: "B(t) \\ge 20",
     })
   );
@@ -112,31 +122,35 @@ function getVariableExps(
   return expressions;
 }
 
-function nextBlocks(
-  stage: Stages,
-  blocks: HugeNum,
-  levels: Map<string, number>
-) {
+function nextIdeas(stage: Stages, ideas: HugeNum, levels: Map<string, number>) {
   if (stage === Stages.Introduction) {
-    return blocks;
+    return ideas;
   }
 
   const pLevel = levels.get("p") ?? 0;
   const p = pLevel > 0 ? 50 * pLevel : 1;
 
-  return blocks.add(HugeNum.fromInt(p));
+  return ideas.add(HugeNum.fromInt(p));
 }
 
 export function Home() {
   const [stage, setStage] = useState(Stages.Introduction);
   const [popupType, setPopupType] = useState("");
   const [levels, setLevels] = useState(new Map());
-  const [blocks, updateBlocks] = useReducer(
+  const [[blocks, ideas], update] = useReducer(
     (
-      blocks: HugeNum,
-      { stage, levels }: { stage: Stages; levels: Map<string, number> }
-    ) => nextBlocks(stage, blocks, levels),
-    HugeNum.ZERO
+      [blocks, ideas]: [HugeNum, HugeNum],
+      i:
+        | { action: "tick"; stage: Stages; levels: Map<string, number> }
+        | { action: "consume"; amount: HugeNum }
+    ): [HugeNum, HugeNum] => {
+      if (i.action === "tick") {
+        const next = nextIdeas(i.stage, ideas, i.levels);
+        return [blocks.add(next.sub(ideas)), next];
+      }
+      return [blocks, ideas.sub(i.amount)];
+    },
+    [HugeNum.ZERO, HugeNum.ZERO]
   );
   const [tick, setTick] = useState(false);
 
@@ -146,7 +160,7 @@ export function Home() {
   }, []);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => updateBlocks({ stage, levels }), [tick]);
+  useEffect(() => update({ action: "tick", stage, levels }), [tick]);
 
   useEffect(() => {
     switch (stage) {
@@ -154,12 +168,23 @@ export function Home() {
         setPopupType("Introduction");
         break;
       case Stages.Adder:
-        if (popupType === "" && blocks.gt(HugeNum.fromInt(19))) {
+        if (popupType === "" && ideas.gt(HugeNum.fromInt(19))) {
           setPopupType("BuyAvailable");
         }
         break;
+      case Stages.Register:
+        if (popupType === "" && ideas.gt(HugeNum.fromInt(999n))) {
+          setPopupType("NewBlocks");
+        }
+        break;
     }
-  }, [stage, blocks, popupType]);
+  }, [stage, ideas, popupType]);
+
+  const beforeClose = useCallback(() => {
+    if (popupType === "NewBlocks" && stage === Stages.Register) {
+      setStage(Stages.CarryLookaheadAdder);
+    }
+  }, [popupType, stage]);
 
   const onClose = useCallback(() => {
     if (popupType === "Introduction" && stage === Stages.Introduction) {
@@ -171,22 +196,33 @@ export function Home() {
     setPopupType("");
   }, [popupType, stage]);
 
+  const variableExps = useMemo(
+    () => getVariableExps(stage, ideas, levels),
+    [stage, ideas, levels]
+  );
+
   const onPurchase = useCallback(
     (key: string) => {
       setLevels((levels) =>
         new Map(levels).set(key, (levels.get(key) ?? 0) + 1)
       );
+      update({
+        action: "consume",
+        amount: variableExps.find((v) => v.key === key)?.cost ?? HugeNum.ZERO,
+      });
       if (stage === Stages.StackOverflow) {
         setPopupType("FirstBuy");
         setStage(Stages.Register);
       }
     },
-    [stage]
+    [stage, variableExps]
   );
+  
+  const costUnit = useMemo(() => stage >= Stages.CarryLookaheadAdder ? "B_{new}(t)" : "B(t)", [stage]);
 
-  const variableExps = useMemo(
+  const variableExpElements = useMemo(
     () =>
-      getVariableExps(stage, blocks, levels).map(
+      variableExps.map(
         ({
           expression,
           isHidden,
@@ -221,7 +257,11 @@ export function Home() {
                     <Latex>{expression}</Latex>
                     <Spacer />
                     <Flex direction="column" alignItems="end">
-                      <Text>{cost}</Text>
+                      {cost.mantissa === 0n ? (
+                        <Text>Free</Text>
+                      ) : (
+                        <Latex children={`${cost.toString()}~${costUnit}`} />
+                      )}
                       <Text color="gray">Level: {level}</Text>
                     </Flex>
                   </Flex>
@@ -248,12 +288,12 @@ export function Home() {
           </Collapse>
         )
       ),
-    [stage, blocks, levels, onPurchase]
+    [variableExps, costUnit, onPurchase]
   );
 
   return (
     <Flex minHeight="100vh" direction="column">
-      <Popup type={popupType} onClose={onClose} />
+      <Popup type={popupType} beforeClose={beforeClose} onClose={onClose} />
       <Grid
         templateColumns={{ base: "1fr", xl: "1fr 1fr" }}
         templateRows={{ base: "1fr 1fr", xl: "1fr" }}
@@ -268,7 +308,9 @@ export function Home() {
           borderColor="inherit"
         >
           <Status
+            stage={stage}
             blocks={blocks}
+            ideas={ideas}
             borderBottom="1px solid"
             borderColor="inherit"
           />
@@ -276,7 +318,7 @@ export function Home() {
             <Latex zIndex={1} fontSize={{ base: "2xl", md: "3xl", xl: "4xl" }}>
               {getPrimaryExp(stage)}
             </Latex>
-            <Progress progress={blocks} />
+            <Progress progress={ideas} />
             <Background isActive={stage !== Stages.Introduction} />
           </Center>
         </Flex>
@@ -288,7 +330,7 @@ export function Home() {
           </TabList>
           <TabPanels py={3} flexGrow={1} position="relative">
             <TabPanel p={0}>
-              <Flex direction="column">{variableExps}</Flex>
+              <Flex direction="column">{variableExpElements}</Flex>
             </TabPanel>
           </TabPanels>
         </Tabs>

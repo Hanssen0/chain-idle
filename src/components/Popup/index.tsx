@@ -42,6 +42,16 @@ const CONTENTS = [
       "You can't wait to do the following calculation",
     ],
   },
+  {
+    type: "NewBlocks",
+    header: "Carry-lookahead Adder",
+    body: [
+      "The chain you create grows as expected",
+      "You feel delighted\n",
+      "As generating more and more new lovely chunks of data",
+      "You realize the calculations can be more efficient",
+    ],
+  },
 ];
 
 function getContent(type: string) {
@@ -50,10 +60,12 @@ function getContent(type: string) {
 
 export function Popup({
   type,
+  beforeClose,
   onClose,
 }: {
   type: string;
-  onClose: () => void;
+  beforeClose?: () => void;
+  onClose?: () => void;
 }) {
   const [part, setPart] = useState(0);
   const content = useMemo(() => getContent(type), [type]);
@@ -64,13 +76,14 @@ export function Popup({
 
   useEffect(() => {
     if (part >= body.length) {
+      beforeClose?.();
       return;
     }
 
     const timeout = setTimeout(next, 4000);
 
     return () => clearTimeout(timeout);
-  }, [part, body]);
+  }, [part, body, beforeClose]);
 
   const contentElements = useMemo(
     () =>
@@ -110,7 +123,7 @@ export function Popup({
           transition={{ enter: { duration: 2 }, exit: { duration: 1 } }}
           onAnimationComplete={() => {
             if (part > body.length) {
-              onClose();
+              onClose?.();
             }
           }}
         >
