@@ -1,3 +1,5 @@
+import { Fields, Game, Stages } from "./types";
+
 export const STORIES = [
   {
     type: "Introduction",
@@ -11,6 +13,7 @@ export const STORIES = [
       '"Thus concatenating all the data?"\n',
       "A chain of data comes into your mind",
     ],
+    hasUnlocked: (game: Fields<Game>) => game.stage >= Stages.Adder,
   },
   {
     type: "BuyAvailable",
@@ -20,6 +23,7 @@ export const STORIES = [
       "The chain in your mind grows longer",
       "Your genius idea needs a piece of paper",
     ],
+    hasUnlocked: (game: Fields<Game>) => game.stage >= Stages.StackOverflow,
   },
   {
     type: "FirstBuy",
@@ -30,6 +34,7 @@ export const STORIES = [
       "With your efficiency significantly improved",
       "You can't wait to do the following calculation",
     ],
+    hasUnlocked: (game: Fields<Game>) => game.stage >= Stages.Register,
   },
   {
     type: "NewBlocks",
@@ -40,6 +45,7 @@ export const STORIES = [
       "As generating more and more new lovely chunks of data",
       "You realize the calculations can be more efficient",
     ],
+    hasUnlocked: (game: Fields<Game>) => game.stage >= Stages.CarryLookaheadAdder,
   },
 ];
 
@@ -48,10 +54,12 @@ export const KNOWLEDGES = [
     type: "ChainIdle",
     header: "Chain Idle",
     link: "https://hanssens-library.gitbook.io/chain-idle/knowledges/chain-idle",
+    hasUnlocked: () => true,
   },
   {
     type: "Links",
     header: "Links",
     link: "https://hanssens-library.gitbook.io/chain-idle/knowledges/links",
+    hasUnlocked: () => true,
   },
 ];

@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import { ServiceWorkerStatus, onceSW } from "./utils/serviceWorker";
 import { LibraryProvider } from "./components/Library";
 import { PopupProvider } from "./components/Popup";
+import { GameProvider } from "./components/Game";
 
 function InnerApp() {
   const send = useSendNotification();
@@ -39,13 +40,15 @@ export function App() {
     <ChakraProvider theme={theme}>
       <Analytics />
       <SpeedInsights />
-      <NotificationProvider>
-        <PopupProvider>
-          <LibraryProvider>
-            <InnerApp />
-          </LibraryProvider>
-        </PopupProvider>
-      </NotificationProvider>
+      <GameProvider>
+        <NotificationProvider>
+          <PopupProvider>
+            <LibraryProvider>
+              <InnerApp />
+            </LibraryProvider>
+          </PopupProvider>
+        </NotificationProvider>
+      </GameProvider>
     </ChakraProvider>
   );
 }

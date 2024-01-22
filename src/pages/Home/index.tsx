@@ -1,6 +1,6 @@
 import { ColorModeSwitcher } from "@/components/ColorModeSwitcher";
 import { Latex } from "@/components/Latex";
-import { Fields, HugeNum } from "@/utils";
+import { Fields, HugeNum, Stages } from "@/utils";
 import {
   Text,
   Button,
@@ -19,19 +19,12 @@ import {
   Box,
   Grid,
 } from "@chakra-ui/react";
-import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { Background } from "./Background";
 import { PopupContent, usePopup } from "@/components/Popup";
 import { Progress } from "./Progress";
 import { LibraryOpener } from "@/components/Library";
-
-enum Stages {
-  Introduction,
-  Adder,
-  StackOverflow,
-  Register,
-  CarryLookaheadAdder,
-}
+import { getVariableCost, useGame } from "@/components/Game";
 
 function Status(
   props: { stage: Stages; blocks: HugeNum; ideas: HugeNum } & FlexProps
@@ -106,7 +99,7 @@ function getVariableExps(
   const expressions = [];
 
   const p = levels.get("p") ?? 0;
-  const cost = HugeNum.fromInt(1000n).mul(HugeNum.fromInt(p));
+  const cost = getVariableCost("p", levels);
   expressions.push(
     VariableExpression.from({
       key: "p",
@@ -123,45 +116,9 @@ function getVariableExps(
   return expressions;
 }
 
-function nextIdeas(stage: Stages, ideas: HugeNum, levels: Map<string, number>) {
-  if (stage === Stages.Introduction) {
-    return ideas;
-  }
-
-  const pLevel = levels.get("p") ?? 0;
-  const p = pLevel > 0 ? 50 * pLevel : 1;
-
-  return ideas.add(HugeNum.fromInt(p));
-}
-
 export function Home() {
-  const [stage, setStage] = useState(Stages.Introduction);
+  const { stage, setStage, levels, purchaseLevel, blocks, ideas } = useGame();
   const { setPopup } = usePopup();
-  const [levels, setLevels] = useState(new Map());
-  const [[blocks, ideas], update] = useReducer(
-    (
-      [blocks, ideas]: [HugeNum, HugeNum],
-      i:
-        | { action: "tick"; stage: Stages; levels: Map<string, number> }
-        | { action: "consume"; amount: HugeNum }
-    ): [HugeNum, HugeNum] => {
-      if (i.action === "tick") {
-        const next = nextIdeas(i.stage, ideas, i.levels);
-        return [blocks.add(next.sub(ideas)), next];
-      }
-      return [blocks, ideas.sub(i.amount)];
-    },
-    [HugeNum.ZERO, HugeNum.ZERO]
-  );
-  const [tick, setTick] = useState(false);
-
-  useEffect(() => {
-    const interval = setInterval(() => setTick((t) => !t), 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => update({ action: "tick", stage, levels }), [tick]);
 
   useEffect(() => {
     switch (stage) {
@@ -187,7 +144,7 @@ export function Home() {
         setStage(Stages.CarryLookaheadAdder);
       }
     },
-    [stage]
+    [stage, setStage]
   );
 
   const onClose = useCallback(
@@ -199,7 +156,7 @@ export function Home() {
         setStage(Stages.StackOverflow);
       }
     },
-    [stage]
+    [stage, setStage]
   );
 
   const variableExps = useMemo(
@@ -209,19 +166,13 @@ export function Home() {
 
   const onPurchase = useCallback(
     (key: string) => {
-      setLevels((levels) =>
-        new Map(levels).set(key, (levels.get(key) ?? 0) + 1)
-      );
-      update({
-        action: "consume",
-        amount: variableExps.find((v) => v.key === key)?.cost ?? HugeNum.ZERO,
-      });
+      purchaseLevel(key);
       if (stage === Stages.StackOverflow) {
         setPopup("FirstBuy");
         setStage(Stages.Register);
       }
     },
-    [stage, variableExps, setPopup]
+    [stage, setPopup, purchaseLevel, setStage]
   );
 
   const costUnit = useMemo(

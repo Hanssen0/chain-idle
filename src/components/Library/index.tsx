@@ -18,12 +18,16 @@ import {
   TabPanel,
   TabPanels,
   Tabs,
+  chakra,
   useDisclosure,
 } from "@chakra-ui/react";
 import { ReactNode, createContext, useContext, useMemo } from "react";
-import { FaBook } from "react-icons/fa6";
+import { FaBook, FaLock as FaLockRaw } from "react-icons/fa6";
 import { usePopup } from "../Popup";
 import { KNOWLEDGES, STORIES } from "@/utils";
+import { useGame } from "../Game";
+
+const FaLock = chakra(FaLockRaw);
 
 const LibraryContext = createContext({
   isOpen: false,
@@ -54,28 +58,37 @@ const TITLE_STYLES: HeadingProps = {
 };
 
 export function LibraryProvider({ children }: { children: ReactNode }) {
+  const game = useGame();
   const disclosure = useDisclosure();
   const { setPopup } = usePopup();
   const stories = useMemo(
     () =>
-      STORIES.map(({ type, header }) => (
-        <Button
-          onClick={() => setPopup(type)}
-          key={type}
-          height={12}
-          bg="none"
-          _hover={{ bg: "none" }}
-          _active={{ bg: "none" }}
-          data-group
-        >
-          <Heading {...TITLE_STYLES}>{header}</Heading>
-        </Button>
-      )),
-    [setPopup]
+      STORIES.map(({ type, header, hasUnlocked }) => {
+        const unlocked = hasUnlocked(game);
+
+        return (
+          <Button
+            onClick={unlocked ? () => setPopup(type) : () => {}}
+            key={type}
+            height={12}
+            bg="none"
+            _hover={{ bg: "none" }}
+            _active={{ bg: "none" }}
+            data-group
+          >
+            {unlocked ? (
+              <Heading {...TITLE_STYLES}>{header}</Heading>
+            ) : (
+              <FaLock fontSize="xl" />
+            )}
+          </Button>
+        );
+      }),
+    [setPopup, game]
   );
   const knowledges = useMemo(
     () =>
-      KNOWLEDGES.map(({ type, header, link }) => (
+      KNOWLEDGES.map(({ type, header, link, hasUnlocked }) => (
         <Button
           as={Link}
           href={link}
