@@ -19,7 +19,7 @@ export function ColorModeSwitcher(props: ColorModeSwitcherProps) {
   return (
     <IconButton
       size="lg"
-      fontSize="4xl"
+      fontSize="3xl"
       variant="ghost"
       color="current"
       onClick={toggleColorMode}

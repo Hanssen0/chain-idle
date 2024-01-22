@@ -1,3 +1,4 @@
+import { STORIES } from "@/utils";
 import {
   Box,
   Container,
@@ -7,83 +8,60 @@ import {
   Portal,
   Text,
 } from "@chakra-ui/react";
-import { useEffect, useMemo, useState } from "react";
-
-const CONTENTS = [
-  {
-    type: "Introduction",
-    header: "Adder",
-    body: [
-      "You were born with a keen nose for mathematics\n",
-      "Today, you are reading a book about the hash function",
-      "You suddenly think",
-      '"Maybe we can divide the data into small pieces."',
-      '"Each piece of data contains the hash of the previous one."',
-      '"Thus concatenating all the data?"\n',
-      "A chain of data comes into your mind",
-    ],
-  },
-  {
-    type: "BuyAvailable",
-    header: "Stack Overflow",
-    body: [
-      '"This seems like it might work!"\n',
-      "The chain in your mind grows longer",
-      "Your genius idea needs a piece of paper",
-    ],
-  },
-  {
-    type: "FirstBuy",
-    header: "Register",
-    body: [
-      "Papers!",
-      "You can finally remember the results you just calculated\n",
-      "With your efficiency significantly improved",
-      "You can't wait to do the following calculation",
-    ],
-  },
-  {
-    type: "NewBlocks",
-    header: "Carry-lookahead Adder",
-    body: [
-      "The chain you create grows as expected",
-      "You feel delighted\n",
-      "As generating more and more new lovely chunks of data",
-      "You realize the calculations can be more efficient",
-    ],
-  },
-];
+import {
+  useEffect,
+  useMemo,
+  useState,
+  createContext,
+  ReactNode,
+  useContext,
+  useCallback,
+} from "react";
 
 function getContent(type: string) {
-  return CONTENTS.find((c) => c.type === type);
+  return STORIES.find((c) => c.type === type);
 }
 
-export function Popup({
-  type,
+const PopupContext = createContext<[string, (t: string) => void]>([
+  "",
+  () => {},
+]);
+
+export function PopupProvider({ children }: { children: ReactNode }) {
+  const [type, setType] = useState("");
+
+  return (
+    <PopupContext.Provider value={[type, setType]}>
+      {children}
+    </PopupContext.Provider>
+  );
+}
+
+export function PopupContent({
   beforeClose,
   onClose,
 }: {
-  type: string;
-  beforeClose?: () => void;
-  onClose?: () => void;
+  beforeClose?: (type: string) => void;
+  onClose?: (type: string) => void;
 }) {
+  const { popupType, setPopup } = usePopup();
   const [part, setPart] = useState(0);
-  const content = useMemo(() => getContent(type), [type]);
+  const content = useMemo(() => getContent(popupType), [popupType]);
   const { header, body } = content ?? { header: "", body: [] };
   const next = () => setPart((p) => p + 1);
 
-  useEffect(() => setPart(0), [type]);
+  useEffect(() => setPart(0), [popupType]);
 
   useEffect(() => {
     if (part >= body.length) {
-      beforeClose?.();
+      beforeClose?.(popupType);
       return;
     }
 
     const timeout = setTimeout(next, 4000);
 
     return () => clearTimeout(timeout);
-  }, [part, body, beforeClose]);
+  }, [part, body, beforeClose, popupType]);
 
   const contentElements = useMemo(
     () =>
@@ -123,7 +101,8 @@ export function Popup({
           transition={{ enter: { duration: 2 }, exit: { duration: 1 } }}
           onAnimationComplete={() => {
             if (part > body.length) {
-              onClose?.();
+              onClose?.(popupType);
+              setPopup("");
             }
           }}
         >
@@ -149,4 +128,23 @@ export function Popup({
       </Box>
     </Portal>
   );
+}
+
+export function usePopup() {
+  const [popupType, setType] = useContext(PopupContext);
+
+  return {
+    popupType,
+    setPopup: useCallback(
+      (newType: string) => {
+        if (popupType !== "" && newType !== "") {
+          return false;
+        }
+
+        setType(newType);
+        return true;
+      },
+      [popupType, setType]
+    ),
+  };
 }

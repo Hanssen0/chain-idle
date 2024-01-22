@@ -21,8 +21,9 @@ import {
 } from "@chakra-ui/react";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { Background } from "./Background";
-import { Popup } from "@/components/Popup";
+import { PopupContent, usePopup } from "@/components/Popup";
 import { Progress } from "./Progress";
+import { LibraryOpener } from "@/components/Library";
 
 enum Stages {
   Introduction,
@@ -135,7 +136,7 @@ function nextIdeas(stage: Stages, ideas: HugeNum, levels: Map<string, number>) {
 
 export function Home() {
   const [stage, setStage] = useState(Stages.Introduction);
-  const [popupType, setPopupType] = useState("");
+  const { setPopup } = usePopup();
   const [levels, setLevels] = useState(new Map());
   const [[blocks, ideas], update] = useReducer(
     (
@@ -165,36 +166,41 @@ export function Home() {
   useEffect(() => {
     switch (stage) {
       case Stages.Introduction:
-        setPopupType("Introduction");
+        setPopup("Introduction");
         break;
       case Stages.Adder:
-        if (popupType === "" && ideas.gt(HugeNum.fromInt(19))) {
-          setPopupType("BuyAvailable");
+        if (ideas.gt(HugeNum.fromInt(19))) {
+          setPopup("BuyAvailable");
         }
         break;
       case Stages.Register:
-        if (popupType === "" && ideas.gt(HugeNum.fromInt(999n))) {
-          setPopupType("NewBlocks");
+        if (ideas.gt(HugeNum.fromInt(999n))) {
+          setPopup("NewBlocks");
         }
         break;
     }
-  }, [stage, ideas, popupType]);
+  }, [stage, ideas, setPopup]);
 
-  const beforeClose = useCallback(() => {
-    if (popupType === "NewBlocks" && stage === Stages.Register) {
-      setStage(Stages.CarryLookaheadAdder);
-    }
-  }, [popupType, stage]);
+  const beforeClose = useCallback(
+    (type: string) => {
+      if (type === "NewBlocks" && stage === Stages.Register) {
+        setStage(Stages.CarryLookaheadAdder);
+      }
+    },
+    [stage]
+  );
 
-  const onClose = useCallback(() => {
-    if (popupType === "Introduction" && stage === Stages.Introduction) {
-      setStage(Stages.Adder);
-    }
-    if (popupType === "BuyAvailable" && stage === Stages.Adder) {
-      setStage(Stages.StackOverflow);
-    }
-    setPopupType("");
-  }, [popupType, stage]);
+  const onClose = useCallback(
+    (type: string) => {
+      if (type === "Introduction" && stage === Stages.Introduction) {
+        setStage(Stages.Adder);
+      }
+      if (type === "BuyAvailable" && stage === Stages.Adder) {
+        setStage(Stages.StackOverflow);
+      }
+    },
+    [stage]
+  );
 
   const variableExps = useMemo(
     () => getVariableExps(stage, ideas, levels),
@@ -211,14 +217,17 @@ export function Home() {
         amount: variableExps.find((v) => v.key === key)?.cost ?? HugeNum.ZERO,
       });
       if (stage === Stages.StackOverflow) {
-        setPopupType("FirstBuy");
+        setPopup("FirstBuy");
         setStage(Stages.Register);
       }
     },
-    [stage, variableExps]
+    [stage, variableExps, setPopup]
   );
-  
-  const costUnit = useMemo(() => stage >= Stages.CarryLookaheadAdder ? "B_{new}(t)" : "B(t)", [stage]);
+
+  const costUnit = useMemo(
+    () => (stage >= Stages.CarryLookaheadAdder ? "B_{new}(t)" : "B(t)"),
+    [stage]
+  );
 
   const variableExpElements = useMemo(
     () =>
@@ -293,7 +302,6 @@ export function Home() {
 
   return (
     <Flex minHeight="100vh" direction="column">
-      <Popup type={popupType} beforeClose={beforeClose} onClose={onClose} />
       <Grid
         templateColumns={{ base: "1fr", xl: "1fr 1fr" }}
         templateRows={{ base: "1fr 1fr", xl: "1fr" }}
@@ -335,9 +343,11 @@ export function Home() {
           </TabPanels>
         </Tabs>
       </Grid>
-      <Flex justifyContent="center" py={2}>
+      <Flex justifyContent="center" py={2} gap={4}>
         <ColorModeSwitcher />
+        <LibraryOpener />
       </Flex>
+      <PopupContent beforeClose={beforeClose} onClose={onClose} />
     </Flex>
   );
 }

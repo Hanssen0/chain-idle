@@ -9,6 +9,8 @@ import {
 } from "./components/Notifications";
 import { useEffect } from "react";
 import { ServiceWorkerStatus, onceSW } from "./utils/serviceWorker";
+import { LibraryProvider } from "./components/Library";
+import { PopupProvider } from "./components/Popup";
 
 function InnerApp() {
   const send = useSendNotification();
@@ -38,7 +40,11 @@ export function App() {
       <Analytics />
       <SpeedInsights />
       <NotificationProvider>
-        <InnerApp />
+        <PopupProvider>
+          <LibraryProvider>
+            <InnerApp />
+          </LibraryProvider>
+        </PopupProvider>
       </NotificationProvider>
     </ChakraProvider>
   );
