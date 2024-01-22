@@ -21,11 +21,12 @@ import {
   chakra,
   useDisclosure,
 } from "@chakra-ui/react";
-import { ReactNode, createContext, useContext, useMemo } from "react";
+import { ReactNode, createContext, useContext, useMemo, useState } from "react";
 import { FaBook, FaLock as FaLockRaw } from "react-icons/fa6";
 import { usePopup } from "../Popup";
 import { KNOWLEDGES, STORIES } from "@/utils";
 import { useGame } from "../Game";
+import { useSwipeable } from "react-swipeable";
 
 const FaLock = chakra(FaLockRaw);
 
@@ -60,6 +61,21 @@ const TITLE_STYLES: HeadingProps = {
 export function LibraryProvider({ children }: { children: ReactNode }) {
   const game = useGame();
   const disclosure = useDisclosure();
+  const [tabIndex, setTabIndex] = useState(0);
+  const tabSwipe = useSwipeable({
+    onSwipedLeft: () => {
+      if (tabIndex === 1) {
+        return;
+      }
+      setTabIndex(tabIndex + 1);
+    },
+    onSwipedRight: () => {
+      if (tabIndex === 0) {
+        return;
+      }
+      setTabIndex(tabIndex - 1);
+    },
+  });
   const { setPopup } = usePopup();
   const stories = useMemo(
     () =>
@@ -115,7 +131,14 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
           <ModalHeader>Library</ModalHeader>
           <ModalCloseButton color="chakra-placeholder-color" />
           <ModalBody pt={0} overflowY="hidden">
-            <Tabs height="100%" display="flex" flexDirection="column">
+            <Tabs
+              height="100%"
+              display="flex"
+              flexDirection="column"
+              index={tabIndex}
+              onChange={setTabIndex}
+              {...tabSwipe}
+            >
               <TabList display="flex">
                 <Tab py={2} flexGrow={1}>
                   Stories
