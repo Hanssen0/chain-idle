@@ -19,22 +19,31 @@ import {
   Box,
   Grid,
 } from "@chakra-ui/react";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Background } from "./Background";
 import { PopupContent, usePopup } from "@/components/Popup";
 import { Progress } from "./Progress";
 import { LibraryOpener } from "@/components/Library";
 import { getVariableCost, useGame } from "@/components/Game";
+import { useChangingNum } from "@/utils/hooks";
 
 function Status(
   props: { stage: Stages; blocks: HugeNum; ideas: HugeNum } & FlexProps
 ) {
   const { stage, blocks, ideas } = props;
-  const elements = [<Latex key="B">{`B(t) = ${blocks.toString()}`}</Latex>];
+
+  const changingBlocks = useChangingNum(blocks);
+  const changingIdeas = useChangingNum(ideas);
+  const elements = [
+    <Latex key="B">{`B(t) = ${changingBlocks.toString()}`}</Latex>,
+  ];
 
   if (stage >= Stages.CarryLookaheadAdder) {
     elements.push(
-      <Latex key="B_new" ml={4}>{`B_{new}(t) = ${ideas.toString()}`}</Latex>
+      <Latex
+        key="B_new"
+        ml={4}
+      >{`B_{new}(t) = ${changingIdeas.toString()}`}</Latex>
     );
   }
 
