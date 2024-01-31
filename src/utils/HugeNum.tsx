@@ -142,6 +142,10 @@ export class HugeNum {
       return HugeNum.ONE_N;
     }
 
+    if (x < HugeNum.PREC_EXP_N) {
+      return 0n;
+    }
+
     if (x < 0n) {
       return HugeNum.ONE_N / HugeNum._tenPow(-x);
     }
