@@ -36,6 +36,10 @@
 
 This project is still under active development, and we are looking forward to your feedback. [Try it now here](https://chain-idle.vercel.app/).
 
+## Related Projects
+
+* [Chain Idle Contracts](https://github.com/handsome0hell/chain-idle-contracts): EVM contracts of the Chain Idle.
+
 ## Start it locally
 
 In the project directory, you can run:
