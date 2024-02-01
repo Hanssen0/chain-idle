@@ -10,7 +10,10 @@
 
 <p align="center">
   <img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/w/handsome0hell/chain-idle">
-  <img alt="GitHub last commit (branch)" src="https://img.shields.io/github/last-commit/handsome0hell/chain-idle/master">
+  <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/handsome0hell/chain-idle/master">
+  <img alt="GitHub commit activity on contracts repo" src="https://img.shields.io/github/commit-activity/w/handsome0hell/chain-idle-contracts?label=%20contracts%20repo%20commit%20activity">
+  <img alt="GitHub last commit on main repo" src="https://img.shields.io/github/last-commit/handsome0hell/chain-idle-contracts/master?label=%20contracts%20repo%20last%20commit">
+  <br />
   <img alt="GitHub deployments" src="https://img.shields.io/github/deployments/handsome0hell/chain-idle/production">
   <img alt="Website" src="https://img.shields.io/website?url=https%3A%2F%2Fchain-idle.vercel.app%2F">
 </p>
