@@ -142,7 +142,7 @@ export class HugeNum {
       return HugeNum.ONE_N;
     }
 
-    if (x < HugeNum.PREC_EXP_N) {
+    if (x < HugeNum.NEG_PREC_EXP_N) {
       return 0n;
     }
 
