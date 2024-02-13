@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://chain-idle.vercel.app/">
-    <img alt="Logo" src="https://raw.githubusercontent.com/handsome0hell/chain-idle/master/assets/logo.svg" width="12.5%" />
+    <img alt="Logo" src="https://raw.githubusercontent.com/Hanssen0/chain-idle/master/assets/logo.svg" width="12.5%" />
   </a>
 </p>
 
@@ -9,12 +9,12 @@
 </h1>
 
 <p align="center">
-  <img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/w/handsome0hell/chain-idle">
-  <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/handsome0hell/chain-idle/master">
-  <img alt="GitHub commit activity on contracts repo" src="https://img.shields.io/github/commit-activity/w/handsome0hell/chain-idle-contracts?label=%20contracts%20repo%20commit%20activity">
-  <img alt="GitHub last commit on main repo" src="https://img.shields.io/github/last-commit/handsome0hell/chain-idle-contracts/master?label=%20contracts%20repo%20last%20commit">
+  <img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/m/Hanssen0/chain-idle">
+  <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/Hanssen0/chain-idle/master">
+  <img alt="GitHub commit activity on contracts repo" src="https://img.shields.io/github/commit-activity/m/Hanssen0/chain-idle-contracts?label=%20contracts%20repo%20commit%20activity">
+  <img alt="GitHub last commit on main repo" src="https://img.shields.io/github/last-commit/Hanssen0/chain-idle-contracts/master?label=%20contracts%20repo%20last%20commit">
   <br />
-  <img alt="GitHub deployments" src="https://img.shields.io/github/deployments/handsome0hell/chain-idle/production">
+  <img alt="GitHub deployments" src="https://img.shields.io/github/deployments/Hanssen0/chain-idle/production">
   <img alt="Website" src="https://img.shields.io/website?url=https%3A%2F%2Fchain-idle.vercel.app%2F">
 </p>
 
@@ -33,7 +33,7 @@
 
 <p align="center">
   <a href="https://chain-idle.vercel.app/">
-    <img src="https://raw.githubusercontent.com/handsome0hell/chain-idle/master/assets/poster.png" width="61.8%" />
+    <img src="https://raw.githubusercontent.com/Hanssen0/chain-idle/master/assets/poster.png" width="61.8%" />
   </a>
 </p>
 
@@ -41,7 +41,7 @@ This project is still under active development, and we are looking forward to yo
 
 ## Related Projects
 
-* [Chain Idle Contracts](https://github.com/handsome0hell/chain-idle-contracts): EVM contracts of the Chain Idle.
+* [Chain Idle Contracts](https://github.com/Hanssen0/chain-idle-contracts): EVM contracts of the Chain Idle.
 
 ## Start it locally
 
