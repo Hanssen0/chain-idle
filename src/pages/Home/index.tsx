@@ -19,13 +19,14 @@ import {
   Box,
   Grid,
 } from "@chakra-ui/react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { Background } from "./Background";
 import { PopupContent, usePopup } from "@/components/Popup";
 import { Progress } from "./Progress";
 import { LibraryOpener } from "@/components/Library";
 import { getVariableCost, useGame } from "@/components/Game";
 import { useChangingNum } from "@/utils/hooks";
+import { ConnectWallet } from "@/components/ConnectWallet";
 
 function Status(
   props: { stage: Stages; blocks: HugeNum; ideas: HugeNum } & FlexProps
@@ -305,6 +306,7 @@ export function Home() {
       </Grid>
       <Flex justifyContent="center" py={2} gap={4}>
         <ColorModeSwitcher />
+        <ConnectWallet />
         <LibraryOpener />
       </Flex>
       <PopupContent beforeClose={beforeClose} onClose={onClose} />

@@ -12,6 +12,7 @@ import { ServiceWorkerStatus, onceSW } from "./utils/serviceWorker";
 import { LibraryProvider } from "./components/Library";
 import { PopupProvider } from "./components/Popup";
 import { GameProvider } from "./components/Game";
+import { CustomWagmiProvider } from "./components/CustomWagmiProvider";
 
 function InnerApp() {
   const send = useSendNotification();
@@ -40,15 +41,17 @@ export function App() {
     <ChakraProvider theme={theme}>
       <Analytics />
       <SpeedInsights />
-      <GameProvider>
-        <NotificationProvider>
-          <PopupProvider>
-            <LibraryProvider>
-              <InnerApp />
-            </LibraryProvider>
-          </PopupProvider>
-        </NotificationProvider>
-      </GameProvider>
+      <CustomWagmiProvider>
+        <GameProvider>
+          <NotificationProvider>
+            <PopupProvider>
+              <LibraryProvider>
+                <InnerApp />
+              </LibraryProvider>
+            </PopupProvider>
+          </NotificationProvider>
+        </GameProvider>
+      </CustomWagmiProvider>
     </ChakraProvider>
   );
 }
