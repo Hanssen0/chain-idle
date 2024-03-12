@@ -4,7 +4,6 @@ import {
   Flex,
   Heading,
   HeadingProps,
-  IconButton,
   IconButtonProps,
   Link,
   Modal,
@@ -27,6 +26,7 @@ import { usePopup } from "../Popup";
 import { KNOWLEDGES, STORIES } from "@/utils";
 import { useGame } from "../Game";
 import { useSwipeable } from "react-swipeable";
+import { ActionButton } from "../ActionButton";
 
 const FaLock = chakra(FaLockRaw);
 
@@ -198,11 +198,7 @@ export function LibraryOpener(props: Omit<IconButtonProps, "aria-label">) {
   const { onOpen } = useContext(LibraryContext);
 
   return (
-    <IconButton
-      size="lg"
-      fontSize="3xl"
-      variant="ghost"
-      color="current"
+    <ActionButton
       onClick={onOpen}
       icon={<FaBook />}
       aria-label="Open library"

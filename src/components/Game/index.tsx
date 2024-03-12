@@ -1,4 +1,5 @@
 import { Game, HugeNum, Stages } from "@/utils";
+import { usePlayer } from "@/utils/hooks/contracts/game";
 import {
   ReactNode,
   createContext,
@@ -28,7 +29,10 @@ function nextIdeas(stage: Stages, ideas: HugeNum, levels: Map<string, number>) {
   const pLevel = levels.get("p") ?? 0;
   const p = pLevel > 0 ? 50 * pLevel : 1;
 
-  return ideas.add(HugeNum.fromInt(p));
+  if (stage < Stages.Multiplier) {
+    return ideas.add(HugeNum.fromInt(p));
+  }
+  return ideas.mul(HugeNum.fromInt(p));
 }
 
 export function GameProvider({ children }: { children: ReactNode }) {
@@ -58,6 +62,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => update({ action: "tick", stage, levels }), [tick]);
+
+  const { data: player } = usePlayer();
+  useEffect(() => {
+    if (!player) {
+      return;
+    }
+    if (stage === Stages.TwosComplement && player.stage !== 0n) {
+      setStage(Stages.FirstRegistered);
+    }
+  }, [player, stage, setStage]);
 
   const purchaseLevel = useCallback(
     (key: string) => {

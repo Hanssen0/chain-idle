@@ -2,12 +2,12 @@ import * as React from "react";
 import {
   useColorMode,
   useColorModeValue,
-  IconButton,
   IconButtonProps,
 } from "@chakra-ui/react";
 import { FaMoon, FaSun } from "react-icons/fa6";
 import { useWeb3ModalTheme } from "@web3modal/wagmi/react";
 import { useEffect } from "react";
+import { ActionButton } from "../ActionButton";
 
 type ColorModeSwitcherProps = Omit<IconButtonProps, "aria-label">;
 
@@ -24,11 +24,7 @@ export function ColorModeSwitcher(props: ColorModeSwitcherProps) {
   }, [colorMode, setThemeMode]);
 
   return (
-    <IconButton
-      size="lg"
-      fontSize="3xl"
-      variant="ghost"
-      color="current"
+    <ActionButton
       onClick={toggleColorMode}
       icon={<Icon />}
       aria-label={`Switch to ${text} mode`}

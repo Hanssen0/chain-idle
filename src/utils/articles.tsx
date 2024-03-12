@@ -1,6 +1,11 @@
 import { Fields, Game, Stages } from "./types";
 
-export const STORIES = [
+export const STORIES: {
+  type: string;
+  header: string;
+  body: string[];
+  hasUnlocked: (game: Fields<Game>) => boolean;
+}[] = [
   {
     type: "Introduction",
     header: "Adder",
@@ -13,7 +18,7 @@ export const STORIES = [
       '"Thus concatenating all the data?"\n',
       "A chain of data comes into your mind",
     ],
-    hasUnlocked: (game: Fields<Game>) => game.stage >= Stages.Adder,
+    hasUnlocked: (game) => game.stage >= Stages.Adder,
   },
   {
     type: "BuyAvailable",
@@ -23,7 +28,7 @@ export const STORIES = [
       "The chain in your mind grows longer",
       "Your genius idea needs a piece of paper",
     ],
-    hasUnlocked: (game: Fields<Game>) => game.stage >= Stages.StackOverflow,
+    hasUnlocked: (game) => game.stage >= Stages.StackOverflow,
   },
   {
     type: "FirstBuy",
@@ -34,7 +39,7 @@ export const STORIES = [
       "With your efficiency significantly improved",
       "You can't wait to do the following calculation",
     ],
-    hasUnlocked: (game: Fields<Game>) => game.stage >= Stages.Register,
+    hasUnlocked: (game) => game.stage >= Stages.Register,
   },
   {
     type: "NewBlocks",
@@ -45,7 +50,30 @@ export const STORIES = [
       "As generating more and more new lovely chunks of data",
       "You realize the calculations can be more efficient",
     ],
-    hasUnlocked: (game: Fields<Game>) => game.stage >= Stages.CarryLookaheadAdder,
+    hasUnlocked: (game) => game.stage >= Stages.CarryLookaheadAdder,
+  },
+  {
+    type: "ConnectWalletNeeded",
+    header: "Two's Complement",
+    body: [
+      "Your understanding of the data chain is getting deeper",
+      "You are planning to divide data blocks into records...\n\n",
+      "Chain Idle is a game on the blockchain",
+      "Before experiencing the content next",
+      "You need to connect to the blockchain to interact with it",
+    ],
+    hasUnlocked: (game) => game.stage >= Stages.TwosComplement,
+  },
+  {
+    type: "Registered",
+    header: "Multiplier",
+    body: [
+      "The unified data structure accelerates your calculation dramatically",
+      "To commemorate this breakthrough",
+      'You name it "Blockchain"\n',
+      "Maybe you should share your masterpiece with others?",
+    ],
+    hasUnlocked: (game) => game.stage >= Stages.Multiplier,
   },
 ];
 

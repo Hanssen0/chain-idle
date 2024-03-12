@@ -9,6 +9,9 @@ export enum Stages {
   StackOverflow,
   Register,
   CarryLookaheadAdder,
+  TwosComplement,
+  FirstRegistered,
+  Multiplier,
 }
 
 export interface Game {

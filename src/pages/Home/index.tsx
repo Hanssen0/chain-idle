@@ -27,6 +27,9 @@ import { LibraryOpener } from "@/components/Library";
 import { getVariableCost, useGame } from "@/components/Game";
 import { useChangingNum } from "@/utils/hooks";
 import { ConnectWallet } from "@/components/ConnectWallet";
+import { useAccount } from "wagmi";
+import { FaArrowDown } from "react-icons/fa6";
+import { ProfileActivator } from "@/components/ProfileActivator";
 
 function Status(
   props: { stage: Stages; blocks: HugeNum; ideas: HugeNum } & FlexProps
@@ -56,14 +59,10 @@ function Status(
 }
 
 function getPrimaryExp(stage: Stages): string {
-  switch (stage) {
-    default:
-    case Stages.Introduction:
-    case Stages.Adder:
-    case Stages.StackOverflow:
-    case Stages.Register:
-      return "B(t + dt) = B(t) + p \\times dt";
+  if (stage < Stages.Multiplier) {
+    return "B(t + dt) = B(t) + pdt";
   }
+  return "B(t + dt) = B(t) \\times pdt";
 }
 
 class VariableExpression {
@@ -127,6 +126,7 @@ function getVariableExps(
 }
 
 export function Home() {
+  const { isConnected } = useAccount();
   const { stage, setStage, levels, purchaseLevel, blocks, ideas } = useGame();
   const { setPopup } = usePopup();
 
@@ -140,18 +140,45 @@ export function Home() {
           setPopup("BuyAvailable");
         }
         break;
+      case Stages.StackOverflow:
+        if ((levels.get("p") ?? 0) === 0) {
+          break;
+        }
+        setPopup("FirstBuy");
+        break;
       case Stages.Register:
         if (ideas.gt(HugeNum.fromInt(999n))) {
           setPopup("NewBlocks");
         }
         break;
+      case Stages.CarryLookaheadAdder:
+        if ((levels.get("p") ?? 0) < 10) {
+          break;
+        }
+        setPopup("ConnectWalletNeeded");
+        break;
+      case Stages.FirstRegistered:
+        setPopup("Registered");
+        break;
     }
-  }, [stage, ideas, setPopup]);
+  }, [stage, ideas, levels, setPopup]);
 
   const beforeClose = useCallback(
     (type: string) => {
       if (type === "NewBlocks" && stage === Stages.Register) {
         setStage(Stages.CarryLookaheadAdder);
+      } else if (type === "FirstBuy" && stage === Stages.StackOverflow) {
+        setStage(Stages.Register);
+      } else if (
+        type === "ConnectWalletNeeded" &&
+        stage === Stages.CarryLookaheadAdder
+      ) {
+        setStage(Stages.TwosComplement);
+      } else if (
+        type === "Registered" &&
+        stage === Stages.FirstRegistered
+      ) {
+        setStage(Stages.Multiplier);
       }
     },
     [stage, setStage]
@@ -161,8 +188,7 @@ export function Home() {
     (type: string) => {
       if (type === "Introduction" && stage === Stages.Introduction) {
         setStage(Stages.Adder);
-      }
-      if (type === "BuyAvailable" && stage === Stages.Adder) {
+      } else if (type === "BuyAvailable" && stage === Stages.Adder) {
         setStage(Stages.StackOverflow);
       }
     },
@@ -172,17 +198,6 @@ export function Home() {
   const variableExps = useMemo(
     () => getVariableExps(stage, ideas, levels),
     [stage, ideas, levels]
-  );
-
-  const onPurchase = useCallback(
-    (key: string) => {
-      purchaseLevel(key);
-      if (stage === Stages.StackOverflow) {
-        setPopup("FirstBuy");
-        setStage(Stages.Register);
-      }
-    },
-    [stage, setPopup, purchaseLevel, setStage]
   );
 
   const costUnit = useMemo(
@@ -215,7 +230,7 @@ export function Home() {
                   isDisabled={!isAvailable || !isPurchasable}
                   borderRadius={0}
                   height=""
-                  onClick={() => onPurchase(key)}
+                  onClick={() => purchaseLevel(key)}
                 >
                   <Flex
                     width="100%"
@@ -258,7 +273,7 @@ export function Home() {
           </Collapse>
         )
       ),
-    [variableExps, costUnit, onPurchase]
+    [variableExps, costUnit, purchaseLevel]
   );
 
   return (
@@ -291,18 +306,51 @@ export function Home() {
             <Background isActive={stage !== Stages.Introduction} />
           </Center>
         </Flex>
-        <Tabs display="flex" flexDirection="column">
-          <TabList display="flex">
-            <Tab py={4} flexGrow={1}>
-              Tools
-            </Tab>
-          </TabList>
-          <TabPanels py={3} flexGrow={1} position="relative">
-            <TabPanel p={0}>
-              <Flex direction="column">{variableExpElements}</Flex>
-            </TabPanel>
-          </TabPanels>
-        </Tabs>
+        <Box position="relative">
+          <Tabs display="flex" flexDirection="column">
+            <TabList display="flex">
+              <Tab py={4} flexGrow={1}>
+                Tools
+              </Tab>
+            </TabList>
+            <TabPanels py={3} flexGrow={1} position="relative">
+              <TabPanel p={0}>
+                <Flex direction="column">{variableExpElements}</Flex>
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
+          <Fade
+            in={stage === Stages.TwosComplement}
+            transition={{ exit: { duration: 1 } }}
+            unmountOnExit
+          >
+            <Center
+              position="absolute"
+              top={0}
+              left={0}
+              width="100%"
+              height="100%"
+              bg="chakra-body-bg"
+            >
+              <Flex direction="column" alignItems="center">
+                <ConnectWallet />
+                {isConnected ? "Connected" : "Click to connect"}
+                <Collapse
+                  transition={{ enter: { duration: 1 }, exit: { duration: 1 } }}
+                  in={isConnected}
+                >
+                  <Flex direction="column" alignItems="center">
+                    <Box mt={4} mb={3}>
+                      <FaArrowDown />
+                    </Box>
+                    <ProfileActivator blocks={blocks} />
+                    Activate your profile
+                  </Flex>
+                </Collapse>
+              </Flex>
+            </Center>
+          </Fade>
+        </Box>
       </Grid>
       <Flex justifyContent="center" py={2} gap={4}>
         <ColorModeSwitcher />

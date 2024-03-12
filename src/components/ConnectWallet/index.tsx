@@ -1,21 +1,18 @@
 import * as React from "react";
-import { Box, IconButton, IconButtonProps, useAccordion } from "@chakra-ui/react";
+import { Box, IconButtonProps } from "@chakra-ui/react";
 import { useWeb3Modal } from "@web3modal/wagmi/react";
 import { SiWalletconnect } from "react-icons/si";
 import { useAccount } from "wagmi";
+import { ActionButton } from "../ActionButton";
 
-type ColorModeSwitcherProps = Omit<IconButtonProps, "aria-label">;
-
-export function ConnectWallet(props: ColorModeSwitcherProps) {
+export function ConnectWallet(props: Omit<IconButtonProps, "aria-label">) {
   const { open } = useWeb3Modal();
   const { isConnected } = useAccount();
+
   return (
-    <IconButton
-      size="lg"
-      fontSize="3xl"
-      variant="ghost"
-      color="current"
+    <ActionButton
       onClick={() => open()}
+      aria-label={`Connect Web3 wallet`}
       icon={
         <>
           <SiWalletconnect />
@@ -32,8 +29,7 @@ export function ConnectWallet(props: ColorModeSwitcherProps) {
           />
         </>
       }
-      aria-label={`Connect Web3 wallet`}
       {...props}
-    />
+    ></ActionButton>
   );
 }
